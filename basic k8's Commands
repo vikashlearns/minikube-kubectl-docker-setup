@@ -22,3 +22,13 @@ kubectl run nginx --image=nginx --dry-run=client -o yaml
 kubectl run nginx --image=nginx ( allows to run a single container pods)
 
 For running Multiple containers pods need to use Manifest file 
+
+# For single container pod - 1/1
+For multi container pod - 2/2
+
+kubectl exec -it multi-container-pod -- bash
+# by default it will connect to the first container 
+
+if you want to connect to other containers of pod - can add  -c with flag <Container name>
+kubectl exec -it multi-container-pod -c redis-container -- bash
+
