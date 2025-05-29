@@ -1,0 +1,17 @@
+# Create and run a container/pod
+kubectl run nginx --image=nginx
+
+# list running container/pod
+kubectl get pods
+
+# view log
+kubectl logs <pod>
+
+# get detailed info
+kubectl describe pod <pod-name>
+
+# Execute interactive shell
+kubectl exec -it <pod-name> -- bash
+
+# Remove pod
+kubectl delete pod <pod-name>
