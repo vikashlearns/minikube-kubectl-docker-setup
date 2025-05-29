@@ -15,3 +15,10 @@ kubectl exec -it <pod-name> -- bash
 
 # Remove pod
 kubectl delete pod <pod-name>
+
+# --dry-run=client (allows you to validate a K8 resource definition without actually applying it to Cluster)
+kubectl run nginx --image=nginx --dry-run=client -o yaml 
+
+kubectl run nginx --image=nginx ( allows to run a single container pods)
+
+For running Multiple containers pods need to use Manifest file 
