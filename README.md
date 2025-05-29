@@ -1,5 +1,3 @@
-Here's your entire setup script properly formatted using triple backticks (` ```bash `) for shell commands and code blocks, with consistent formatting and corrections applied:
-
 ```bash
 # Update package list and install prerequisites
 sudo apt-get update
