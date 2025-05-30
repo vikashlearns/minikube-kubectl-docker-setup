@@ -16,6 +16,33 @@ kubectl exec -it <pod-name> -- bash
 # Remove pod
 kubectl delete pod <pod-name>
 
+Pods always run on Nodes ( Worker Machine) 
+Node - Managed by Kubernetes Control Plane
+Node can have multiple pods
+
+Ways to create objects:-
+1. Kubectl run
+2. Manifest file - contains information of resources to be created 
+YAML/JSON file - that defines the desired state of K8 objects
+
+Benefits of Manifest :
+It can be stored in version control systems like git
+Allowing you to track changes to your infra over time and easily rollback to previous versions
+
+K8's Resource type :- 
+1. Pod
+2. Deployment
+3. Services
+4. Configmap
+5. Secrets
+6. Persistent Volume
+7 Persistent volumeclaim
+8. Ingress 
+9. Namespace
+
+* Each container in pod must have a unique name 
+
+# Generating Manifest file using CLI 
 # --dry-run=client (allows you to validate a K8 resource definition without actually applying it to Cluster)
 kubectl run nginx --image=nginx --dry-run=client -o yaml 
 
