@@ -127,3 +127,28 @@ args- define the args or parameter that are passed in command
 
 * if a container image defines a default ENTRYPOINT - K8 will use it unless you explicitly override it with command
 
+CLI Documentation
+
+Kubectl explain pods (will explain about pods)
+ kubectl explain pod.spec.containers.lifecycle ( it will go inside the pod and then spec and then container and lifecycle and so more will explain) as you enter the .resource name.
+
+#EXPOSE  
+-It informs docker that container listen on specified port at runtime
+-does not publish the port
+-it functions as type of documentation  between person who builds the image  & person  who runs the container about which ports are intended to publish
+
+is primarily used for the documenting part so that the person who is running the image knows on which port a application is running so that he can publish it accordingly.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+  - name: nginx
+    image: democontainer
+    ports:
+    - containerPort: 8080
+
+**Expose port 8080 in the pod." (Imp in EXAMS) 
+Kubernetes does not publish or expose this port externally unless you also create a Service.
