@@ -1,0 +1,102 @@
+Kubernetes :
+
+Containers are ephemeral - that is short lived in nature
+(containers can die and revive any time )
+
+Docker Problem:
+1. Single Host
+2. Auto healing
+Auto Healing - Without user manual intervention container should restart automatically
+
+3. Auto Scaling - As soon as load increases 
+1) manual increase load'
+2) Automatically 
+
+4. Docker is minimilistic - Doesn't provide any Enterprise level Support 
+
+Enterprise Level Support -
+- Loadbalancer
+- Firewall
+- Autoscale
+- Healing
+- API Gateway 
+
+Kubernetes - by default  is a cluster(group of nodes)
+
+Production use case - 
+1. Master node architecture
+2. Replicaset (Replication controller)
+YAML file -> Manually increase
+HPA (Horizontal Pod Autoscaler) - To automatically increase
+3. Autoscaling
+4. Enterprise support
+
+
+Control Plane - API Server, ETCD, Scheduler, Controller Manager, Cloud controller Manager(C-C-M)
+
+Data Plane - kubelet , Kube-proxy , Container Runtime 
+
+Pod - smallest level of deployment
+-it is wrapper over  container which has advanced capability
+
+docker - to deploy container
+
+Kubelet - responsible for maintaing  pod ( looks for if pod is running or not)
+if not running - Autohealing  ( inform K8)
+
+Container run time - to run containers in K8
+dockershim for docker
+containerd for  K8
+
+Docker O or bridge network - in docker networking mandatory for running pods
+
+In K8 - Kube proxy = provides you  networking capabilities 
+-allocated with IP address
+- Loadbalancing capabilities ( iptables in linux machine)
+
+Kubelet - deploying
+kube-proxy - providing networking
+Container Runtime - Execution environment for container
+
+WHy Control Plane ?
+Cluster - who will decide (should pod be created on node1 or node 2 or node3)
+
+API Server - control plane of K8 is a component that exposes your K8 
+has to be exposed to External world
+
+Scheduler - Responsible for Scheduling  your pod/resources on K8
+
+Who decides - API Server
+Who acts on it - Scheduler
+
+Etcd - Key Value store 
+acts as a backup service
+backing store of entire cluster
+
+Entire K8 cluster Information is stored as object or Key value pair in Etcd
+Without etcd - you dont have cluster  related information
+
+Controller Manager - Ensure such controllers are running
+E.g - 1 Controller replica set - For maintaing  state  of pod
+Ensure pods are always running
+
+Control Plan - controlling the action
+Data plane - Executing the action 
+
+K8 Production systems 
+Kubernetes - Open source container orchestration solution platform 
+Amazon --> EKS
+Redhat --> Openshift
+VM --> Tanzu
+Rancher --> Rancher
+
+Tools to manage cluster -
+KOPS - Kubernetes operation 
+kubeadm - lot of manual activity , upgrades , configuring, modifying K8 clusters)
+- not smooth
+
+For Devops engineer ( Has to deal with)
+-Installation
+-Upgrades
+-Modification
+-Deletion
