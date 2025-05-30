@@ -480,3 +480,148 @@ Deployment- Dynamic workloads with frequent updates.
 
 
 
+
+PS C:\KPLAB> kubectl create deployment nginx-deployment --image=nginx
+deployment.apps/nginx-deployment created
+PS C:\KPLAB> kubectl get deployments
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   1/1     1            1           5s
+PS C:\KPLAB> kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-5959b5b5c9   1         1         1       11s
+PS C:\KPLAB> kubcetl create deployment nginx-deployment --dry-run=client -o yaml > deployment.yaml
+kubcetl : The term 'kubcetl' is not recognized as the name of a cmdlet,
+function, script file, or operable program. Check the spelling of the name, or
+if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ kubcetl create deployment nginx-deployment --dry-run=client -o yaml > ...
++ ~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (kubcetl:String) [], CommandNotF
+   oundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+PS C:\KPLAB> kubectl create deployment nginx-deployment --dry-run=client -o yaml > deployment.yaml
+error: required flag(s) "image" not set
+PS C:\KPLAB> kubectl create deployment nginx-deployment --image=nginx --dry-run=client -o yaml > deployment.yaml
+PS C:\KPLAB> kubectl rollout history deployment nginx-deployment
+deployment.apps/nginx-deployment
+REVISION  CHANGE-CAUSE
+1         <none>
+
+PS C:\KPLAB> kubectl set image --help
+Update existing container image(s) of resources.
+
+PS C:\KPLAB> kubectl set image deployment/nginx-deployment nginx=httpd:latest
+deployment.apps/nginx-deployment image updated
+PS C:\KPLAB> kubectl get pods
+NAME                                READY   STATUS        RESTARTS   AGE
+nginx-deployment-5959b5b5c9-gv8pv   1/1     Terminating   0          5m30s
+nginx-deployment-6dbf987d68-7754w   1/1     Running       0          4s
+PS C:\KPLAB> kubectl rollout history deployment nginx-deployment
+deployment.apps/nginx-deployment
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+PS C:\KPLAB> kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-5959b5b5c9   0         0         0       6m6s
+nginx-deployment-6dbf987d68   1         1         1       40s
+PS C:\KPLAB> kubectl describe rs nginx-deployment-5959b5b5c9
+Name:           nginx-deployment-5959b5b5c9
+Namespace:      default
+Selector:       app=nginx-deployment,pod-template-hash=5959b5b5c9
+Labels:         app=nginx-deployment
+                pod-template-hash=5959b5b5c9
+Annotations:    deployment.kubernetes.io/desired-replicas: 1
+                deployment.kubernetes.io/max-replicas: 2
+                deployment.kubernetes.io/revision: 1
+Controlled By:  Deployment/nginx-deployment
+Replicas:       0 current / 0 desired
+Pods Status:    0 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:  app=nginx-deployment
+           pod-template-hash=5959b5b5c9
+  Containers:
+   nginx:
+    Image:         nginx
+    Port:          <none>
+    Host Port:     <none>
+    Environment:   <none>
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Events:
+  Type    Reason            Age    From                   Message
+  ----    ------            ----   ----                   -------
+  Normal  SuccessfulCreate  6m17s  replicaset-controller  Created pod: nginx-deployment-5959b5b5c9-gv8pv
+  Normal  SuccessfulDelete  47s    replicaset-controller  Deleted pod: nginx-deployment-5959b5b5c9-gv8pv
+PS C:\KPLAB> kubectl describe rs nginx-deployment-6dbf987d68
+Name:           nginx-deployment-6dbf987d68
+Namespace:      default
+Selector:       app=nginx-deployment,pod-template-hash=6dbf987d68
+Labels:         app=nginx-deployment
+                pod-template-hash=6dbf987d68
+Annotations:    deployment.kubernetes.io/desired-replicas: 1
+                deployment.kubernetes.io/max-replicas: 2
+                deployment.kubernetes.io/revision: 2
+Controlled By:  Deployment/nginx-deployment
+Replicas:       1 current / 1 desired
+Pods Status:    1 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:  app=nginx-deployment
+           pod-template-hash=6dbf987d68
+  Containers:
+   nginx:
+    Image:         httpd:latest
+    Port:          <none>
+    Host Port:     <none>
+    Environment:   <none>
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Events:
+  Type    Reason            Age   From                   Message
+  ----    ------            ----  ----                   -------
+  Normal  SuccessfulCreate  70s   replicaset-controller  Created pod: nginx-deployment-6dbf987d68-7754w
+PS C:\KPLAB> kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-5959b5b5c9   0         0         0       7m6s
+nginx-deployment-6dbf987d68   1         1         1       100s
+PS C:\KPLAB> kubectl rollout undo deployment nginx-deployment
+deployment.apps/nginx-deployment rolled back
+PS C:\KPLAB> kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-5959b5b5c9   1         1         1       7m21s
+nginx-deployment-6dbf987d68   0         0         0       115s
+
+TO roll back to specific version-
+PS C:\KPLAB> kubectl rollout undo deployment nginx-deployment
+deployment.apps/nginx-deployment rolled back
+PS C:\KPLAB> kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-5959b5b5c9   1         1         1       7m21s
+nginx-deployment-6dbf987d68   0         0         0       115s
+PS C:\KPLAB> kubectl rollout undo deployment nginx-deployment --to-revision=2
+deployment.apps/nginx-deployment rolled back
+PS C:\KPLAB> kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-5959b5b5c9   0         0         0       10m
+nginx-deployment-6dbf987d68   1         1         1       4m42s
+
+
+PS C:\KPLAB> kubectl scale --replicas=3 deployment nginx-deployment
+deployment.apps/nginx-deployment scaled
+PS C:\KPLAB> kubectl get pods
+NAME                                READY   STATUS              RESTARTS   AGE
+nginx-deployment-6dbf987d68-5vj7d   1/1     Running             0          3s
+nginx-deployment-6dbf987d68-8xff7   1/1     Running             0          79s
+nginx-deployment-6dbf987d68-mmktg   0/1     ContainerCreating   0          3s
+PS C:\KPLAB> kubectl delete deployment nginx-deployment
+deployment.apps "nginx-deployment" deleted
+PS C:\KPLAB> kubectl get pods
+No resources found in default namespace.
+
+
