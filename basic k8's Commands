@@ -332,3 +332,53 @@ nginx   1/1     Running   0          3m56s   env=dev,run=nginx,status=running
 pod-1   1/1     Running   0          14m     run=pod-1,status=running
 pod-2   1/1     Running   0          14m     env=stage,run=pod-2,status=running
 pod-3   1/1     Running   0          14m     env=prod,run=pod-3,status=running
+
+
+Challenges with Replicaset
+1. designed to maintain a specific state of running pods - not to manage regular updates or changes to their configuration 
+2. Replica set lacks a Rollback mechanism - for reverting to previous config in case of error during updates
+3.  Label collison with replicaset selectors - When replicaset's selector matches the label of pods that it didn't create - it starts treating them as part of its managed set
+can cause unintended consequences.
+
+
+
+PS C:\KPLAB> kubectl get pods
+NAME                        READY   STATUS    RESTARTS   AGE
+frontend-replicaset-kzfwm   1/1     Running   0          16s
+PS C:\KPLAB> kubectl run external-pod --image=nginx
+pod/external-pod created
+PS C:\KPLAB> kubectl label pod external-pod app=webserver
+pod/external-pod labeled
+PS C:\KPLAB> kubectl get pods
+NAME                        READY   STATUS    RESTARTS   AGE
+external-pod                1/1     Running   0          18s
+frontend-replicaset-kzfwm   1/1     Running   0          73s
+PS C:\KPLAB> kubectl get pods --show-labels
+NAME                        READY   STATUS    RESTARTS   AGE   LABELS
+external-pod                1/1     Running   0          27s   app=webserver,run=external-pod
+frontend-replicaset-kzfwm   1/1     Running   0          82s   tier=frontend
+PS C:\KPLAB> kubectl apply -f rs.yaml
+replicaset.apps/webserver-replicaset created
+PS C:\KPLAB> kubectl get pods --show-labels
+NAME                         READY   STATUS    RESTARTS   AGE    LABELS
+external-pod                 1/1     Running   0          66s    app=webserver,run=external-pod
+frontend-replicaset-kzfwm    1/1     Running   0          2m1s   tier=frontend
+webserver-replicaset-cpnhp   1/1     Running   0          8s     app=webserver
+webserver-replicaset-plh9t   1/1     Running   0          8s     app=webserver
+PS C:\KPLAB> kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+external-pod                 1/1     Running   0          71s
+frontend-replicaset-kzfwm    1/1     Running   0          2m6s
+webserver-replicaset-cpnhp   1/1     Running   0          13s
+webserver-replicaset-plh9t   1/1     Running   0          13s
+
+PS C:\KPLAB> kubectl get rs
+NAME                   DESIRED   CURRENT   READY   AGE
+frontend-replicaset    1         1         1       48m
+webserver-replicaset   3         3         3       43s
+PS C:\KPLAB> kubectl delete -f rs.yaml
+replicaset.apps "webserver-replicaset" deleted
+PS C:\KPLAB> kubectl get pods
+NAME                        READY   STATUS    RESTARTS   AGE
+frontend-replicaset-kzfwm   1/1     Running   0          2m55s
+
