@@ -382,3 +382,101 @@ PS C:\KPLAB> kubectl get pods
 NAME                        READY   STATUS    RESTARTS   AGE
 frontend-replicaset-kzfwm   1/1     Running   0          2m55s
 
+Deployments - higher Level of abstraction built on top of replicaset
+It not only manages replicaset but also provide advanced features:
+- Rolling updates
+-rollback
+- versioning 
+
+1. Updating the container image 
+In replicaset - when you try to change the container image - the existing pod are really not affected - only the newer pods
+whenever they are created - they will be created with a newer image
+With deployment - you can change the specification like Container Image and other Spec.
+
+Rolling Updates -Deployment will perform updates in rollout manner to ensure app is not down
+
+Rollout history - Deployment allows us to inspect history of your deployments 
+It provides a record of your changes made to your deployment overtime
+Enabling you to understnad evolution of your app and troubleshoot potential issues. 
+
+# kubectl rollout history deployment/nginx-deployment
+
+PS C:\KPLAB> kubectl get pods
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-54f7d6bc76-mx2c2   1/1     Running   0          80s
+redis-replica-5dbc458645-89z7l      1/1     Running   0          4m
+redis-replica-5dbc458645-npzlg      1/1     Running   0          4m
+webserver-replicaset-2smpf          1/1     Running   0          2m44s
+webserver-replicaset-kzcl4          1/1     Running   0          2m44s
+webserver-replicaset-lbfck          1/1     Running   0          2m44s
+PS C:\KPLAB> kubectl delete pod webserver-replicaset-lbfck
+pod "webserver-replicaset-lbfck" deleted
+PS C:\KPLAB> kubectl get pods
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-54f7d6bc76-mx2c2   1/1     Running   0          99s
+redis-replica-5dbc458645-89z7l      1/1     Running   0          4m19s
+redis-replica-5dbc458645-npzlg      1/1     Running   0          4m19s
+webserver-replicaset-2smpf          1/1     Running   0          3m3s
+webserver-replicaset-52gfm          1/1     Running   0          6s
+webserver-replicaset-kzcl4          1/1     Running   0          3m3s
+PS C:\KPLAB> kubectl delete -f rs.yaml
+replicaset.apps "webserver-replicaset" deleted
+PS C:\KPLAB> kubectl delete -f deployment.yaml
+deployment.apps "nginx-deployment" deleted
+PS C:\KPLAB> kubectl apply -f deployment.yaml
+deployment.apps/nginx-deployment created
+PS C:\KPLAB> kubectl get pods
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-54f7d6bc76-jjlj7   1/1     Running   0          11s
+redis-replica-5dbc458645-89z7l      1/1     Running   0          5m16s
+redis-replica-5dbc458645-npzlg      1/1     Running   0          5m16s
+PS C:\KPLAB> kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-54f7d6bc76   1         1         1       39s
+redis-replica-5dbc458645      2         2         2       5m44s
+PS C:\KPLAB> kubectl apply -f deployment.yaml
+deployment.apps/nginx-deployment configured
+PS C:\KPLAB> kubectl get pods -w
+NAME                                READY   STATUS        RESTARTS   AGE
+nginx-deployment-54f7d6bc76-jjlj7   1/1     Terminating   0          53s
+nginx-deployment-c95765fd4-cddxz    1/1     Running       0          5s
+redis-replica-5dbc458645-89z7l      1/1     Running       0          5m58s
+redis-replica-5dbc458645-npzlg      1/1     Running       0          5m58s
+nginx-deployment-54f7d6bc76-jjlj7   0/1     Completed     0          53s
+nginx-deployment-54f7d6bc76-jjlj7   0/1     Completed     0          54s
+nginx-deployment-54f7d6bc76-jjlj7   0/1     Completed     0          54s
+PS C:\KPLAB> kubectl get pods
+NAME                               READY   STATUS    RESTARTS   AGE
+nginx-deployment-c95765fd4-cddxz   1/1     Running   0          71s
+redis-replica-5dbc458645-89z7l     1/1     Running   0          7m4s
+redis-replica-5dbc458645-npzlg     1/1     Running   0          7m4s
+
+PS C:\KPLAB> kubectl rollout history deployment/nginx-deployment
+deployment.apps/nginx-deployment
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+PS C:\KPLAB> kubectl apply -f deployment.yaml
+deployment.apps/nginx-deployment configured
+PS C:\KPLAB> kubectl rollout history deployment/nginx-deployment
+deployment.apps/nginx-deployment
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+3         <none>
+
+Key Differences - ReplicaSet and Deployments 
+Features :
+1. Abstraction level - ReplicaSet - Lower-level , Deployment- Higher-level
+2. Primary function - ReplicaSet - Ensure a specific number of replicas are running.
+Deployment - manages ReplicaSets and handles updates.
+3. Rolling Updates - ReplicaSets - Not supported
+Deployment - Supported with Configurable strategies 
+4. Rollback - ReplicaSet - Not supported
+Deployment - Supported with version history
+5. Use Case - ReplicaSet - Simple , Static workloads
+Deployment- Dynamic workloads with frequent updates.
+
+
+
