@@ -1,0 +1,53 @@
+  challenges:
+1. Manual scaling - if an app needed to handle traffic developers had to manually start additional containers
+2. Lack of Fault tolerance - If container failed - it wouldn't automatically restart without manual intervention
+
+To Fix these :- came Container Orchestration 
+
+- It automates deployment, management, scaling and networking of containers 
+
+1. Scaling - automatically scale containers up and down based on defined policies and real time traffic
+
+Container Orchestration - Process of automating the Networking and management of containers so that you can deploy applications at scale.
+
+- Provisioning and Deployment
+- Configuration and Scheduling
+- Resource Allocation
+- Load balancing and traffic route
+- Monitoring Container health
+
+K8's Features:-
+1. Pods Scaling
+2. Service discovery and load balancing 
+3. Self healing of Containers
+4. Secret Management
+5. Automated rollout & rollbacks
+
+1. Managed K8 Service - EKS 
+2. K8's development tool - Minikube , K3d
+3. Setup K8's from scratch
+
+Constraint of choosing Cloud Providers
+-easy to use
+-Cost effective
+-Free Credits
+
+Option for connectivity
+- API - curl http://localhost:8080/api/v1/namespace/default/pods
+- CLI
+- GUI
+
+Kubectl to describe nodes
+
+Authentication 
+1. DNS/IP address of K8 Control plane
+2. Authentication credential 
+
+Default path of Kubeconfig file - .Kube folder in home directory 
+
+Difference between PODS and Containers:
+Pod can contain 1 or more docker containers that share the same networking namespace and shared storage volumes
+- As they share same network -> they can intercommunicate using local host 
+
+Pod is a container - it can be a single container based pod or Multi container based pod
+
