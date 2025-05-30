@@ -51,3 +51,287 @@ Pod can contain 1 or more docker containers that share the same networking names
 
 Pod is a container - it can be a single container based pod or Multi container based pod
 
+REPLICA SET 
+issue with Manual  steps :-
+1. If pod fails - K8 will not automatically recreate it ( manually detect and recreate pods)
+2. Manually create or delete pod definitition and apply changes
+
+Replicaset Purpose - to maintain a stable set of replica pods running at any given time 
+kubectl get replicaset
+
+NAME               DESIRED   CURRENT   READY   AGE
+nginx-rs-7f8d5f8b7d   3         3         3       10m
+
+Column Breakdown:
+NAME: Name of the ReplicaSet
+
+DESIRED: Number of pods specified in the ReplicaSet spec
+
+CURRENT: Number of pods currently created by the ReplicaSet
+
+READY: Number of pods ready to serve traffic
+
+AGE: Time since the ReplicaSet was created
+PS C:\KPLAB> kubectl apply -f replicaset.yaml
+replicaset.apps/frontend-replicaset created
+PS C:\KPLAB> kubectl get pods
+NAME                        READY   STATUS              RESTARTS   AGE
+frontend-replicaset-dcz7k   0/1     ContainerCreating   0          8s
+frontend-replicaset-kgdk8   0/1     ContainerCreating   0          8s
+frontend-replicaset-t6kzc   0/1     ContainerCreating   0          8s
+PS C:\KPLAB> kubectl get pods --show-labels
+NAME                        READY   STATUS              RESTARTS   AGE   LABELS
+frontend-replicaset-dcz7k   0/1     ContainerCreating   0          50s   tier=frontend
+frontend-replicaset-kgdk8   0/1     ContainerCreating   0          50s   tier=frontend
+frontend-replicaset-t6kzc   0/1     ContainerCreating   0          50s   tier=frontend
+PS C:\KPLAB> kubectl get pods --show-labels
+NAME                        READY   STATUS    RESTARTS   AGE   LABELS
+frontend-replicaset-dcz7k   1/1     Running   0          88s   tier=frontend
+frontend-replicaset-kgdk8   1/1     Running   0          88s   tier=frontend
+frontend-replicaset-t6kzc   1/1     Running   0          88s   tier=frontend
+
+Create Replicaset 
+PS C:\KPLAB> kubectl scale --replicas=5 rs/frontend-replicaset
+replicaset.apps/frontend-replicaset scaled
+PS C:\KPLAB> kubectl get replicaset
+NAME                  DESIRED   CURRENT   READY   AGE
+frontend-replicaset   5         5         5       3m10s
+PS C:\KPLAB> kubectl get pods
+NAME                        READY   STATUS    RESTARTS   AGE
+frontend-replicaset-9ghkq   1/1     Running   0          13s
+frontend-replicaset-dcz7k   1/1     Running   0          3m17s
+frontend-replicaset-hjbgc   1/1     Running   0          13s
+frontend-replicaset-kgdk8   1/1     Running   0          3m17s
+frontend-replicaset-t6kzc   1/1     Running   0          3m17s
+
+As a result, Kubernetes terminated 2 pods and kept one running to match the new desired state.
+PS C:\KPLAB> kubectl scale --replicas=1 rs/frontend-replicaset
+replicaset.apps/frontend-replicaset scaled
+PS C:\KPLAB> kubectl get pods
+NAME                        READY   STATUS    RESTARTS   AGE
+frontend-replicaset-dcz7k   1/1     Running   0          4m2s
+
+
+# Challenges with Replicasets : designed to maintain a specific state of running pods - not to maintain regular updates or changes to their configuration. 
+
+PS C:\KPLAB> kubectl apply -f rs.yaml
+replicaset.apps/webserver-replicaset created
+PS C:\KPLAB> kubectl get rs
+NAME                   DESIRED   CURRENT   READY   AGE
+frontend-replicaset    1         1         1       8m20s
+webserver-replicaset   3         3         1       5s
+PS C:\KPLAB> kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+frontend-replicaset-dcz7k    1/1     Running   0          8m26s
+webserver-replicaset-492hx   1/1     Running   0          11s
+webserver-replicaset-9cc84   1/1     Running   0          11s
+webserver-replicaset-jvcw5   1/1     Running   0          11s
+
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: webserver-replicaset
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webserver
+  template:
+    metadata:
+      labels:
+        app: webserver
+    spec:
+      containers:
+      - name: nginx-container
+        image: httpd:latest
+
+So from here we can determine that replica set configuration by itself was updated successfully.
+However, the pods as part of the replica set are not updated here.
+
+PS C:\KPLAB> kubectl apply -f rs.yaml
+replicaset.apps/webserver-replicaset configured
+PS C:\KPLAB> kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+frontend-replicaset-dcz7k    1/1     Running   0          10m
+webserver-replicaset-492hx   1/1     Running   0          2m6s
+webserver-replicaset-9cc84   1/1     Running   0          2m6s
+webserver-replicaset-jvcw5   1/1     Running   0          2m6s
+PS C:\KPLAB> kubectl describe rs webserver-replicaset
+Name:         webserver-replicaset
+Namespace:    default
+Selector:     app=webserver
+Labels:       <none>
+Annotations:  <none>
+Replicas:     3 current / 3 desired
+Pods Status:  3 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:  app=webserver
+  Containers:
+   nginx-container:
+    Image:         httpd:latest
+    Port:          <none>
+    Host Port:     <none>
+    Environment:   <none>
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Events:
+  Type    Reason            Age    From                   Message
+  ----    ------            ----   ----                   -------
+  Normal  SuccessfulCreate  2m25s  replicaset-controller  Created pod: webserver-replicaset-492hx
+  Normal  SuccessfulCreate  2m25s  replicaset-controller  Created pod: webserver-replicaset-jvcw5
+  Normal  SuccessfulCreate  2m25s  replicaset-controller  Created pod: webserver-replicaset-9cc84
+PS C:\KPLAB> kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+frontend-replicaset-dcz7k    1/1     Running   0          10m
+webserver-replicaset-492hx   1/1     Running   0          2m44s
+webserver-replicaset-9cc84   1/1     Running   0          2m44s
+webserver-replicaset-jvcw5   1/1     Running   0          2m44s
+PS C:\KPLAB> kubectl describe pod webserver-replicaset-9cc84
+Name:             webserver-replicaset-9cc84
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             minikube/172.31.154.192
+Start Time:       Fri, 30 May 2025 08:36:57 +0530
+Labels:           app=webserver
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.29
+IPs:
+  IP:           10.244.0.29
+Controlled By:  ReplicaSet/webserver-replicaset
+Containers:
+  nginx-container:
+    Container ID:   docker://2479be4c00374baa3b4395881dee83d6c1c7d69b66e51c02a0cf1d67a4cf7fed
+    Image:          nginx:latest
+    Image ID:       docker-pullable://nginx@sha256:fb39280b7b9eba5727c884a3c7810002e69e8f961cc373b89c92f14961d903a0
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Fri, 30 May 2025 08:37:03 +0530
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-5rdpq (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  kube-api-access-5rdpq:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  2m54s  default-scheduler  Successfully assigned default/webserver-replicaset-9cc84 to minikube
+  Normal  Pulling    2m53s  kubelet            Pulling image "nginx:latest"
+  Normal  Pulled     2m48s  kubelet            Successfully pulled image "nginx:latest" in 2.294s (4.561s including waiting). Image size: 192457322 bytes.
+  Normal  Created    2m48s  kubelet            Created container nginx-container
+  Normal  Started    2m48s  kubelet            Started container nginx-container
+
+Checked the image is still nginx .
+
+# 
+PS C:\KPLAB> kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+frontend-replicaset-dcz7k    1/1     Running   0          13m
+webserver-replicaset-492hx   1/1     Running   0          5m24s
+webserver-replicaset-9cc84   1/1     Running   0          5m24s
+webserver-replicaset-jvcw5   1/1     Running   0          5m24s
+PS C:\KPLAB> kubectl delete pod webserver-replicaset-jvcw5
+pod "webserver-replicaset-jvcw5" deleted
+PS C:\KPLAB> kubectl get pods
+NAME                         READY   STATUS              RESTARTS   AGE
+frontend-replicaset-dcz7k    1/1     Running             0          13m
+webserver-replicaset-492hx   1/1     Running             0          5m42s
+webserver-replicaset-9cc84   1/1     Running             0          5m42s
+webserver-replicaset-svspq   0/1     ContainerCreating   0          5s
+PS C:\KPLAB> kubectl describe pod webserver-replicaset-svspq
+Name:             webserver-replicaset-svspq
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             minikube/172.31.154.192
+Start Time:       Fri, 30 May 2025 08:42:34 +0530
+Labels:           app=webserver
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.30
+IPs:
+  IP:           10.244.0.30
+Controlled By:  ReplicaSet/webserver-replicaset
+Containers:
+  nginx-container:
+    Container ID:   docker://7325cf6c3c3896049a608ba49bd8aac6b9759b4253898a10f8909f2f166aa75e
+    Image:          httpd:latest
+    Image ID:       docker-pullable://httpd@sha256:09cb4b94edaaa796522c545328b62e9a0db60315c7be9f2b4e02204919926405
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Fri, 30 May 2025 08:42:43 +0530
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-lwz8r (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  kube-api-access-lwz8r:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  20s   default-scheduler  Successfully assigned default/webserver-replicaset-svspq to minikube
+  Normal  Pulling    20s   kubelet            Pulling image "httpd:latest"
+  Normal  Pulled     11s   kubelet            Successfully pulled image "httpd:latest" in 8.773s (8.773s including waiting). Image size: 148247098 bytes.
+  Normal  Created    11s   kubelet            Created container nginx-container
+  Normal  Started    11s   kubelet            Started container nginx-container
+
+# Why this approach is risky in production:
+Zero downtime risk:
+When replicas are scaled to 0, all pods are terminated, meaning no instance of your app is available to serve traffic.
+
+Cold start latency:
+When you scale back up, new pods must be scheduled, pulled (image), and started, which can take several seconds to minutes — depending on image size and cluster conditions.
+
+State loss (if applicable):
+Any in-memory state or ephemeral data in the pods is lost when they are terminated.
+
+
+
+PS C:\KPLAB> kubectl scale rs/webserver-replicaset --replicas=0
+replicaset.apps/webserver-replicaset scaled
+PS C:\KPLAB> kubectl get pods
+NAME                        READY   STATUS    RESTARTS   AGE
+frontend-replicaset-dcz7k   1/1     Running   0          15m
+
+
