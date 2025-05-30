@@ -32,3 +32,98 @@ kubectl exec -it multi-container-pod -- bash
 if you want to connect to other containers of pod - can add  -c with flag <Container name>
 kubectl exec -it multi-container-pod -c redis-container -- bash
 
+# when a docker image is built - it can have certain ENTRYPOINT and CMD instructions - that define what container needs to run when it starts 
+(When you create a pod - you can define COMMAND and ARGUMENT for container that runs in that pod)
+COMMAND ----> ENTRYPOINT
+ARGUMENT ----> CMD
+
+#In this exercise, you create a Pod that runs one container. The configuration file for the Pod defines a command and  arguments:
+
+original - 
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: new-ping-pod
+spec:
+  containers:
+  - name: ping-container
+    image: busybox:latest
+    command: ["ping"]
+    args: ["-c", "60", "google.com"]
+
+-> COMMAND argument defined --:> overrides the default ENTRYPOINT.
+-> args(argument) ---> overrides default CMD 
+
+
+ kubectl run ping-pod --image=busybox:latest --command -- ping "-c" "30" "google.com"
+
+
+# Defining commands and argument
+
+1. Array []
+2. Multi-line YAML list
+
+Features : 
+1. Syntax - > Array - JSON style [] , Multi-line - YAML style -
+2. Readability -> Array - Compact hard to read , Multi-line - more human readable
+3. Preference -> Array - suitable for short command , Multi-line - preferred for long command 
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: new-ping-pod
+spec:
+  containers:
+  - name: ping-container
+    image: busybox:latest
+    command: ["ping","-c", "60", "google.com"]
+    
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: new-ping-pod
+spec:
+  containers:
+  - name: ping-container
+    image: busybox:latest
+    command: 
+      - "ping"
+      - "-c"
+      - "60" 
+      - "google.com"
+
+Separation of args and command in K8 is design choice that provides flexibility and clarity 
+
+To delete all pods
+kubectl delete pod --all
+
+
+PS C:\KPLAB> kubectl run custom-pod --image=busybox:latest --dry-run=client -o yaml --command -- echo "Hello World"!
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: custom-pod
+  name: custom-pod
+spec:
+  containers:
+  - command:
+    - echo
+    - Hello World
+    - '!'
+    image: busybox:latest
+    name: custom-pod
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+
+Command - to specify ENTRYPOINT or main executable that will run in the container
+args- define the args or parameter that are passed in command
+
+* if a container image defines a default ENTRYPOINT - K8 will use it unless you explicitly override it with command
+
