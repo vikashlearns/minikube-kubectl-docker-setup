@@ -152,3 +152,9 @@ spec:
 
 **Expose port 8080 in the pod." (Imp in EXAMS) 
 Kubernetes does not publish or expose this port externally unless you also create a Service.
+
+#Labels - Key/value pair that are attached to objects such as pods
+Labels = Tags
+kubectl get pods -l env=dev
+
+#Selectors - allows us to filter objects based on label
